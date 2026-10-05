@@ -65,6 +65,8 @@ export const deleteRun = (id) => db.del('runs', id);
 
 export const DEFAULT_SETTINGS = {
   voice: true,
+  voiceName: '', // 빈 값이면 자연스러운 여성 음성을 자동 선택
+  voiceRate: 1,
   announce: 'd1000', // d500 | d1000 | d2000 | t300 | t600
   items: { distance: true, time: true, lapPace: true, avgPace: false },
   beep: true,

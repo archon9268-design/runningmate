@@ -1,6 +1,6 @@
 import { getSettings, saveSettings, exportAll, importAll, wipeAll } from '../db.js';
-import { setAudioSettings, speak, unlockAudio, beep } from '../audio.js';
-import { toast, dateKey } from '../util.js';
+import { setAudioSettings, speak, unlockAudio, beep, koreanVoices, bestKoreanVoice } from '../audio.js';
+import { toast, dateKey, esc } from '../util.js';
 import { wakeLockSupported } from '../wakelock.js';
 
 const ANNOUNCE_OPTIONS = [
@@ -10,6 +10,21 @@ const ANNOUNCE_OPTIONS = [
   ['t300', '5분마다'],
   ['t600', '10분마다'],
 ];
+
+const RATE_OPTIONS = [
+  [0.9, '느리게'],
+  [1, '보통'],
+  [1.1, '조금 빠르게'],
+  [1.2, '빠르게'],
+];
+
+function voiceOptions(selected) {
+  const voices = koreanVoices();
+  const best = bestKoreanVoice();
+  const auto = `<option value="" ${!selected ? 'selected' : ''}>자동 (자연스러운 여성 음성${best ? ` · ${esc(best.name)}` : ''})</option>`;
+  if (!voices.length) return `${auto}<option disabled>한국어 음성을 찾는 중…</option>`;
+  return auto + voices.map((v) => `<option value="${esc(v.name)}" ${v.name === selected ? 'selected' : ''}>${esc(v.name)}</option>`).join('');
+}
 
 const ITEMS = [
   ['distance', '거리'],
@@ -28,6 +43,13 @@ export async function render(el) {
     <div class="card form">
       <div class="card-title">음성 코칭</div>
       <label class="switch-row"><span>음성 안내</span><input type="checkbox" id="voice" ${s.voice ? 'checked' : ''}></label>
+      <label>목소리
+        <select id="voice-name">${voiceOptions(s.voiceName)}</select>
+      </label>
+      <label>말하기 속도
+        <select id="voice-rate">${RATE_OPTIONS.map(([v, l]) => `<option value="${v}" ${Number(s.voiceRate) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+      </label>
+      <p class="muted small">아이폰에서 더 자연스러운 목소리를 쓰려면: 아이폰 설정 → 손쉬운 사용 → 읽기 및 말하기 → 음성 → 한국어 → <b>유나(고품질)</b> 다운로드 후, 앱을 다시 열고 위 목록에서 선택하세요.</p>
       <label>안내 주기
         <select id="announce">${ANNOUNCE_OPTIONS.map(([k, v]) => `<option value="${k}" ${s.announce === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
       </label>
@@ -76,6 +98,12 @@ export async function render(el) {
   bindCheck('#beep', 'beep');
   bindCheck('#autopause', 'autoPause');
   el.querySelector('#announce').onchange = (e) => { s.announce = e.target.value; save(); };
+  const voiceSelect = el.querySelector('#voice-name');
+  voiceSelect.onchange = (e) => { s.voiceName = e.target.value; save(); };
+  el.querySelector('#voice-rate').onchange = (e) => { s.voiceRate = Number(e.target.value); save(); };
+  if (!koreanVoices().length && 'speechSynthesis' in window) {
+    speechSynthesis.addEventListener('voiceschanged', () => { voiceSelect.innerHTML = voiceOptions(s.voiceName); }, { once: true });
+  }
   el.querySelectorAll('[data-item]').forEach((c) => {
     c.onchange = () => { s.items[c.dataset.item] = c.checked; save(); };
   });
@@ -85,7 +113,7 @@ export async function render(el) {
     unlockAudio();
     setAudioSettings(s);
     beep(1320, 0.3);
-    speak('1킬로미터. 시간 6분 12초. 구간 페이스 6분 12초', { force: true, interrupt: true });
+    speak('1킬로미터. 시간 6분 12초. 구간 페이스 6분 12초. 잘하고 있어요!', { force: true, interrupt: true });
   };
 
   el.querySelector('#export').onclick = async () => {

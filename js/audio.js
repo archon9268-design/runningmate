@@ -1,15 +1,41 @@
 let ctx = null;
-let settings = { voice: true, beep: true };
+let settings = { voice: true, beep: true, voiceName: '', voiceRate: 1 };
 let koVoice = null;
+
+const FEMALE_NAMES = ['sunhi', 'yuna', 'sora', 'heami', 'jiyoung', 'seoyeon', 'google 한국의', 'google korean'];
+const MALE_NAMES = ['injoon', 'minsu', 'hyunsu', 'gookmin', 'bongjin'];
+const NATURAL_MARKS = ['natural', 'premium', 'enhanced', '고품질', 'neural'];
 
 export function setAudioSettings(s) {
   settings = s;
+  pickVoice();
+}
+
+export function koreanVoices() {
+  if (!('speechSynthesis' in window)) return [];
+  return speechSynthesis.getVoices().filter((v) => v.lang && v.lang.toLowerCase().replace('_', '-').startsWith('ko'));
+}
+
+/** 자연스러운 여성 음성일수록 높은 점수 */
+function voiceScore(v) {
+  const name = v.name.toLowerCase();
+  let score = 0;
+  if (FEMALE_NAMES.some((n) => name.includes(n))) score += 10;
+  if (MALE_NAMES.some((n) => name.includes(n))) score -= 20;
+  if (NATURAL_MARKS.some((n) => name.includes(n))) score += 5;
+  if (name.includes('premium')) score += 2;
+  return score;
+}
+
+export function bestKoreanVoice() {
+  const voices = koreanVoices();
+  if (!voices.length) return null;
+  return [...voices].sort((a, b) => voiceScore(b) - voiceScore(a))[0];
 }
 
 function pickVoice() {
-  if (!('speechSynthesis' in window)) return;
-  const voices = speechSynthesis.getVoices();
-  koVoice = voices.find((v) => v.lang === 'ko-KR') || voices.find((v) => v.lang && v.lang.toLowerCase().startsWith('ko')) || null;
+  const voices = koreanVoices();
+  koVoice = (settings.voiceName && voices.find((v) => v.name === settings.voiceName)) || bestKoreanVoice();
 }
 
 if ('speechSynthesis' in window) {
@@ -62,6 +88,7 @@ export function speak(text, { force = false, interrupt = false } = {}) {
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'ko-KR';
   if (koVoice) u.voice = koVoice;
-  u.rate = 1.05;
+  u.rate = settings.voiceRate || 1;
+  u.pitch = 1;
   speechSynthesis.speak(u);
 }
