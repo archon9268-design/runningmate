@@ -4,6 +4,7 @@ import { summarize, inRange, periodRange } from '../stats.js';
 import { runListItem, startRun, isIndoor, setIndoor, planDayText, planDayToOpts } from '../ui.js';
 import { savedSessionData, getSession, restoreSession, clearSession } from '../tracker.js';
 import { setAudioSettings } from '../audio.js';
+import { requestMotionPermission } from '../cadence.js';
 
 function progress(m, goalKm) {
   if (!goalKm) return '';
@@ -94,6 +95,7 @@ export async function render(el) {
   if (saved) {
     el.querySelector('#restore').onclick = () => {
       setAudioSettings(settings);
+      requestMotionPermission();
       restoreSession(settings);
       go('#/live');
     };

@@ -2,6 +2,7 @@ import { getSession, clearSession, savedSessionData } from '../tracker.js';
 import { saveRun } from '../db.js';
 import { beep } from '../audio.js';
 import { wakeLockSupported } from '../wakelock.js';
+import { cadenceAvailable } from '../cadence.js';
 import { KIND_LABEL, fmtAmount } from '../interval.js';
 import { esc, fmtDuration, fmtKm, fmtPace, go, toast } from '../util.js';
 import { goalText } from '../ui.js';
@@ -125,6 +126,7 @@ export async function render(el) {
           <div class="metric"><div class="v" id="m-dist">0.00</div><div class="l">거리 km</div></div>
           <div class="metric"><div class="v" id="m-pace">-'--"</div><div class="l">현재 페이스</div></div>
           <div class="metric"><div class="v" id="m-avg">-'--"</div><div class="l">평균 페이스</div></div>`}
+          <div class="metric" id="m-cad-box" hidden><div class="v" id="m-cad">--</div><div class="l">케이던스</div></div>
         </div>
         ${s.indoor ? '' : `<div id="live-map" class="live-map" ${mapVisible ? '' : 'hidden'}></div>`}
         <div class="controls">
@@ -141,6 +143,7 @@ export async function render(el) {
         <div class="lock-screen" id="lockscreen" hidden>
           <div class="lock-time" id="l-time"></div>
           <div class="lock-dist" id="l-dist"></div>
+          <div class="lock-step" id="l-cad"></div>
           <div class="lock-step" id="l-step"></div>
           <div class="lock-map-slot" id="l-map"></div>
           <div class="lock-hint">길게 눌러 잠금 해제</div>
@@ -261,6 +264,17 @@ export async function render(el) {
     setText('#l-time', t);
     setText('#l-dist', s.indoor ? '' : `${fmtKm(s.distanceM)} km`);
 
+    const cadOn = cadenceAvailable();
+    const cad = s.cadence;
+    const cadBox = q('#m-cad-box');
+    if (cadBox && cadBox.hidden === cadOn) {
+      cadBox.hidden = !cadOn;
+      q('.metrics').classList.toggle('four', cadOn && !s.indoor);
+      q('.metrics').classList.toggle('one', cadOn && s.indoor);
+    }
+    setText('#m-cad', cad ? String(cad) : '--');
+    setText('#l-cad', cadOn && cad ? `케이던스 ${cad}` : '');
+
     if (s.steps.length) {
       const step = s.currentStep;
       const box = q('#ibox');
@@ -309,6 +323,7 @@ export async function render(el) {
           <div><b>${fmtDuration(run.durationSec)}</b><small>시간</small></div>
           <div><b>${fmtPace(run.avgPaceSec)}</b><small>평균 페이스</small></div>
         </div>
+        ${run.avgCadence ? `<p class="muted small">평균 케이던스 ${run.avgCadence} spm · ${run.stepCount.toLocaleString()}걸음</p>` : ''}
       </div>
       <div class="card form">
         ${s.indoor ? '<label>트레드밀 거리 (km)<input type="number" id="indoor-dist" inputmode="decimal" step="0.01" min="0" placeholder="예: 5.2"></label>' : ''}

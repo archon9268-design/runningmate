@@ -2,6 +2,7 @@ import { speak, beep } from './audio.js';
 import { keepAwake } from './wakelock.js';
 import { expandPreset, KIND_LABEL, speakAmount } from './interval.js';
 import { speakKm, speakDuration, speakPace } from './util.js';
+import { startCadence, stopCadence, cadenceFrom } from './cadence.js';
 
 const STORAGE_KEY = 'rm.activeRun';
 const MAX_ACCURACY_M = 40;
@@ -24,6 +25,7 @@ const PERSISTED_FIELDS = [
   'id', 'type', 'indoor', 'goal', 'preset', 'planDate', 'status', 'startedAt', 'endedAt',
   'distanceM', 'route', 'seg', 'laps', 'lapStartD', 'lapStartT', 'steps', 'stepIdx', 'stepStartD',
   'stepStartT', 'stepResults', 'stepsDone', 'nextAnnounce', 'lastAnnounceD', 'lastAnnounceT', 'goalDone',
+  'stepCount',
 ];
 
 export class RunSession {
@@ -71,6 +73,9 @@ export class RunSession {
     this.goalDone = false;
     this.lastPaceAlert = 0;
 
+    this.stepCount = 0;
+    this.stepTimes = [];
+
     this.gpsAccuracy = null;
     this.gpsError = null;
     this.lastPos = null;
@@ -100,6 +105,23 @@ export class RunSession {
     const dt = (b.ts - a.ts) / 1000;
     if (dd < 10 || dt <= 0) return null;
     return dt / (dd / 1000);
+  }
+
+  /** 현재 케이던스 (spm) */
+  get cadence() {
+    return this.status === 'running' ? cadenceFrom(this.stepTimes) : null;
+  }
+
+  /** 평균 케이던스 (spm). 걸음이 충분히 쌓였을 때만 */
+  get avgCadence() {
+    return this.stepCount >= 30 && this.t > 0 ? Math.round(this.stepCount / (this.t / 60)) : null;
+  }
+
+  onStep(ts) {
+    if (this.status !== 'running') return;
+    this.stepCount++;
+    this.stepTimes.push(ts);
+    if (this.stepTimes.length > 60) this.stepTimes.splice(0, this.stepTimes.length - 60);
   }
 
   get currentStep() {
@@ -305,6 +327,8 @@ export class RunSession {
     const dd = this.distanceM - this.lastAnnounceD;
     if (it.lapPace && !this.indoor && dd > 50) parts.push(`구간 페이스 ${speakPace((t - this.lastAnnounceT) / (dd / 1000))}`);
     if (it.avgPace && !this.indoor && this.avgPace) parts.push(`평균 페이스 ${speakPace(this.avgPace)}`);
+    const cad = this.cadence;
+    if (it.cadence && cad) parts.push(`케이던스 ${cad}`);
     this.lastAnnounceD = this.distanceM;
     this.lastAnnounceT = t;
     if (parts.length) speak(parts.join('. '));
@@ -354,6 +378,7 @@ export class RunSession {
 
   startTimer() {
     if (!this.timer) this.timer = setInterval(() => this.tick(), 250);
+    startCadence((ts) => this.onStep(ts));
   }
 
   pause(auto = false) {
@@ -366,6 +391,7 @@ export class RunSession {
     this.status = 'paused';
     this.autoPaused = auto;
     this.recent = [];
+    this.stepTimes = [];
     speak(auto ? '자동 일시정지' : '일시정지', { interrupt: true });
     this.persist();
     this.emit();
@@ -412,6 +438,7 @@ export class RunSession {
 
   cleanup() {
     this.stopGps();
+    stopCadence();
     clearInterval(this.timer);
     this.timer = null;
     keepAwake(false);
@@ -432,6 +459,8 @@ export class RunSession {
       elapsedSec: Math.round(((this.endedAt || Date.now()) - this.startedAt) / 1000),
       avgPaceSec: dist > 0 ? Math.round(durationSec / (dist / 1000)) : null,
       calories: weightKg ? Math.round(weightKg * (dist / 1000) * 1.036) : null,
+      stepCount: this.stepCount || null,
+      avgCadence: this.stepCount >= 30 && durationSec > 0 ? Math.round(this.stepCount / (durationSec / 60)) : null,
       route: this.indoor ? [] : this.route,
       laps: this.indoor ? [] : this.laps,
       steps: this.stepResults,

@@ -1,6 +1,7 @@
 import { esc, fmtKm, fmtDuration, fmtPace, fmtShortDate, uid, toast, go } from './util.js';
 import { unlockAudio, setAudioSettings } from './audio.js';
 import { keepAwake } from './wakelock.js';
+import { requestMotionPermission } from './cadence.js';
 import { createSession, getSession } from './tracker.js';
 import { getSettings } from './db.js';
 import { hasDistanceStep, fmtAmount } from './interval.js';
@@ -36,6 +37,7 @@ export function startRun(opts, settings) {
     return;
   }
   unlockAudio();
+  requestMotionPermission();
   keepAwake(true);
   setAudioSettings(settings);
   const s = createSession({ ...opts, indoor }, settings, uid());

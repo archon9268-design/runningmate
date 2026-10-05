@@ -33,6 +33,12 @@ export async function render(el, [id]) {
         <div><b>${run.calories ?? '-'}</b><small>kcal</small></div>
         <div><b>${bestLap}</b><small>최고 1km</small></div>
       </div>
+      ${run.avgCadence ? `
+      <div class="stat-grid small">
+        <div><b>${run.avgCadence}</b><small>평균 케이던스 spm</small></div>
+        <div><b>${run.stepCount.toLocaleString()}</b><small>걸음</small></div>
+        <div><b>${run.distanceM > 0 ? Math.round((run.distanceM * 100) / run.stepCount) : '-'}</b><small>보폭 cm</small></div>
+      </div>` : ''}
     </div>
     ${hasRoute ? '<div class="card"><div id="detail-map" class="detail-map"></div></div>' : ''}
     ${series.length > 1 ? `<div class="card"><div class="card-title">페이스</div>${paceChart(series)}</div>` : ''}

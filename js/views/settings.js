@@ -31,6 +31,7 @@ const ITEMS = [
   ['time', '시간'],
   ['lapPace', '구간 페이스'],
   ['avgPace', '평균 페이스'],
+  ['cadence', '케이던스'],
 ];
 
 export async function render(el) {
