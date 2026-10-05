@@ -142,6 +142,7 @@ export async function render(el) {
           <div class="lock-time" id="l-time"></div>
           <div class="lock-dist" id="l-dist"></div>
           <div class="lock-step" id="l-step"></div>
+          <div class="lock-map-slot" id="l-map"></div>
           <div class="lock-hint">길게 눌러 잠금 해제</div>
           <div class="lock-bar"><div id="l-bar"></div></div>
         </div>
@@ -166,10 +167,30 @@ export async function render(el) {
         map = null;
       }
     });
-    q('#lock')?.addEventListener('click', () => {
-      q('#lockscreen').hidden = false;
-    });
+    q('#lock')?.addEventListener('click', () => setLocked(true));
     bindLock();
+  };
+
+  /** 잠금 화면을 켜고 끈다. 지도가 열려 있으면 잠금 화면 안으로 옮겨서 계속 보여 준다 */
+  const setLocked = (locked) => {
+    const ls = q('#lockscreen');
+    const box = q('#live-map');
+    if (!ls) return;
+    ls.hidden = !locked;
+    const withMap = locked && mapVisible && !!box;
+    ls.classList.toggle('with-map', withMap);
+    if (box) {
+      if (withMap) q('#l-map').appendChild(box);
+      else if (box.parentElement.id === 'l-map') q('.controls').before(box);
+    }
+    if (map) {
+      setTimeout(() => {
+        if (!map) return;
+        map.invalidateSize();
+        lastMapKey = '';
+        updateMap();
+      }, 50);
+    }
   };
 
   const bindLock = () => {
@@ -188,7 +209,7 @@ export async function render(el) {
       bar.style.transition = 'width 1.2s linear';
       bar.style.width = '100%';
       holdTimer = setTimeout(() => {
-        ls.hidden = true;
+        setLocked(false);
         reset();
       }, 1200);
     });
@@ -336,7 +357,7 @@ export async function render(el) {
         drawFinished();
       } else {
         drawRunning();
-        if (wasLocked && (s.status === 'running' || s.autoPaused)) q('#lockscreen').hidden = false;
+        if (wasLocked && (s.status === 'running' || s.autoPaused)) setLocked(true);
       }
     }
     if (s.status === 'ready') updateReady();

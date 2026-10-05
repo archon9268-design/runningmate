@@ -1,5 +1,5 @@
 // 온라인이면 항상 최신 파일을 쓰고, 오프라인일 때만 캐시를 쓴다. 파일을 추가하면 ASSETS에 넣고 VERSION을 올린다.
-const VERSION = 'rm-v5';
+const VERSION = 'rm-v6';
 
 const ASSETS = [
   './',

@@ -358,6 +358,11 @@ input[type=checkbox] { width: 24px; height: 24px; accent-color: var(--accent); f
 .lock-time { font-size: 96px; font-weight: 700; color: #888; }
 .lock-dist { font-size: 40px; font-weight: 600; color: #777; }
 .lock-step { font-size: 22px; color: #777; }
+.lock-screen.with-map { padding-top: calc(var(--safe-t) + 5vh); }
+.lock-screen.with-map .lock-time { font-size: 80px; line-height: 1; }
+.lock-map-slot { width: 92%; }
+.lock-map-slot:empty { display: none; }
+.lock-map-slot .live-map { height: 42vh; pointer-events: none; margin-top: 8px; }
 .lock-hint { margin-top: auto; color: #555; }
 .lock-bar { margin-bottom: calc(var(--safe-b) + 10vh); width: 60%; height: 6px; background: #222; border-radius: 3px; overflow: hidden; }
 .lock-bar > div { height: 100%; width: 0; background: var(--accent); }
