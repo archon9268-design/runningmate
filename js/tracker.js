@@ -225,8 +225,9 @@ export class RunSession {
     const s = this.currentStep;
     if (s && s.unit === 'distance' && this.stepRemaining <= 0) this.advanceStep();
     if (this.nextAnnounce.unit === 'distance' && this.distanceM >= this.nextAnnounce.at) {
+      const mark = Math.floor(this.distanceM / this.nextAnnounce.value) * this.nextAnnounce.value;
       while (this.nextAnnounce.at <= this.distanceM) this.nextAnnounce.at += this.nextAnnounce.value;
-      this.announce();
+      this.announce(mark);
     }
     this.checkGoal();
   }
@@ -295,11 +296,11 @@ export class RunSession {
     this.emit();
   }
 
-  announce() {
+  announce(markM) {
     const it = this.settings.items || {};
     const t = this.t;
     const parts = [];
-    if (it.distance && !this.indoor) parts.push(speakKm(this.distanceM));
+    if (it.distance && !this.indoor) parts.push(speakKm(markM ?? this.distanceM));
     if (it.time) parts.push(`시간 ${speakDuration(t)}`);
     const dd = this.distanceM - this.lastAnnounceD;
     if (it.lapPace && !this.indoor && dd > 50) parts.push(`구간 페이스 ${speakPace((t - this.lastAnnounceT) / (dd / 1000))}`);
