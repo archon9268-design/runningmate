@@ -329,6 +329,7 @@ input[type=checkbox] { width: 24px; height: 24px; accent-color: var(--accent); f
 .goal-box { background: var(--card); border-radius: 14px; padding: 10px 14px; text-align: center; }
 
 .live-map { height: 240px; border-radius: 14px; overflow: hidden; }
+.live-map, .detail-map { position: relative; z-index: 0; isolation: isolate; }
 .controls { display: flex; gap: 14px; align-items: center; margin-top: auto; padding-top: 8px; }
 .skip-link { align-self: center; }
 .live.paused .metric.main .v { opacity: 0.6; }
@@ -344,9 +345,10 @@ input[type=checkbox] { width: 24px; height: 24px; accent-color: var(--accent); f
 .lock-screen {
   position: fixed; inset: 0;
   background: #000;
-  z-index: 200;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 2000;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
   gap: 10px;
+  padding-top: calc(var(--safe-t) + 12vh);
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
@@ -356,8 +358,8 @@ input[type=checkbox] { width: 24px; height: 24px; accent-color: var(--accent); f
 .lock-time { font-size: 96px; font-weight: 700; color: #888; }
 .lock-dist { font-size: 40px; font-weight: 600; color: #777; }
 .lock-step { font-size: 22px; color: #777; }
-.lock-hint { margin-top: 40px; color: #555; }
-.lock-bar { width: 60%; height: 6px; background: #222; border-radius: 3px; overflow: hidden; }
+.lock-hint { margin-top: auto; color: #555; }
+.lock-bar { margin-bottom: calc(var(--safe-b) + 10vh); width: 60%; height: 6px; background: #222; border-radius: 3px; overflow: hidden; }
 .lock-bar > div { height: 100%; width: 0; background: var(--accent); }
 
 /* ---------- 토스트 ---------- */
