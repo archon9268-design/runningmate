@@ -1,4 +1,4 @@
-import { getSession, clearSession, savedSessionData } from '../tracker.js';
+import { getSession, clearSession } from '../tracker.js';
 import { saveRun } from '../db.js';
 import { beep } from '../audio.js';
 import { wakeLockSupported } from '../wakelock.js';
@@ -32,11 +32,7 @@ function lapsTable(laps) {
 export async function render(el) {
   const s = getSession();
   if (!s) {
-    if (savedSessionData()) {
-      go('#/');
-      return;
-    }
-    el.innerHTML = '<div class="card"><p>진행 중인 러닝이 없습니다.</p><a class="btn" href="#/">홈으로</a></div>';
+    location.replace('#/');
     return;
   }
   document.body.classList.add('live-mode');

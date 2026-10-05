@@ -87,6 +87,7 @@ pre { white-space: pre-wrap; }
 #nav a svg { width: 24px; height: 24px; }
 #nav a.on { color: var(--accent); }
 body.live-mode #nav { display: none; }
+body.live-mode { overscroll-behavior: none; }
 body.live-mode #view { padding-bottom: calc(var(--safe-b) + 16px); }
 
 #live-banner {

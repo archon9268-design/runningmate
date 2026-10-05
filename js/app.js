@@ -46,6 +46,7 @@ const view = document.getElementById('view');
 const banner = document.getElementById('live-banner');
 let cleanup = null;
 let renderToken = 0;
+let currentPath = null;
 
 nav.innerHTML = `
   <div class="brand">RunningMate</div>
@@ -67,6 +68,13 @@ banner.onclick = () => { location.hash = '#/live'; };
 
 async function router() {
   const path = (location.hash || '#/').slice(1) || '/';
+  const s = getSession();
+  if (currentPath === '/live' && path !== '/live' && s && (s.status === 'running' || s.status === 'paused')) {
+    // 달리는 중 흔들림으로 들어온 뒤로 가기 제스처를 무시하고 러닝 화면에 머문다
+    window.history.pushState(null, '', '#/live');
+    return;
+  }
+  currentPath = path;
   const match = ROUTES.map(([re, mod, key]) => [path.match(re), mod, key]).find(([m]) => m);
   const token = ++renderToken;
 
