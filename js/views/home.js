@@ -34,7 +34,7 @@ export async function render(el) {
   }
 
   el.innerHTML = `
-    <h1>런닝메이트</h1>
+    <h1>RunningMate</h1>
     ${saved ? `
       <div class="card warn">
         <b>진행 중이던 러닝이 있습니다</b>
